@@ -47,23 +47,27 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 				details = e.BuildEnqueued.Details
 			case *pb.BuildEvent_BuildFinished_:
 				details = e.BuildFinished.Details
-			case *pb.BuildEvent_ConsoleOutput_:
-			case *pb.BuildEvent_ComponentStreamFinished:
-			case *pb.BuildEvent_BazelEvent:
-			case *pb.BuildEvent_BuildExecutionEvent:
-			case *pb.BuildEvent_SourceFetchEvent:
+			case *pb.BuildEvent_ConsoleOutput_,
+				*pb.BuildEvent_ComponentStreamFinished,
+				*pb.BuildEvent_BazelEvent,
+				*pb.BuildEvent_BuildExecutionEvent,
+				*pb.BuildEvent_SourceFetchEvent:
 			default:
 				log.Error("unknown event type")
 			}
-			var data parser.BuildEvent
-			err := anypb.UnmarshalTo(details, &data, proto.UnmarshalOptions{})
-			if err != nil {
-				log.Error("failed to unmarshal event", zap.Error(err))
-				break
-			}
-			test := data.GetTestResult()
-			if test != nil {
-				log.Info("test result", zap.String("result", test.GetStatusDetails()))
+			if details != nil {
+				var data parser.BuildEvent
+				err := anypb.UnmarshalTo(details, &data, proto.UnmarshalOptions{})
+				if err != nil {
+					log.Error("failed to unmarshal event", zap.Error(err))
+					break
+				}
+				test := data.GetTestResult()
+				if test != nil {
+					log.Info("test result", zap.String("result", test.GetStatusDetails()))
+				}
+			} else {
+				log.Warn("tset result nil")
 			}
 		}
 		acks = append(acks, int(in.GetOrderedBuildEvent().SequenceNumber))
