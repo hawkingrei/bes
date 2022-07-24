@@ -118,8 +118,9 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 		test := data.GetTestResult()
 		if test != nil {
 			log.Info("test result", zap.String("result", test.GetStatusDetails()))
+		} else {
+			log.Warn("test result get nil")
 		}
-		log.Warn("test result get nil")
 	} else {
 		log.Warn("tset result nil")
 	}
