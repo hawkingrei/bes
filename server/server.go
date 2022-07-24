@@ -63,8 +63,13 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 					break
 				}
 				test := data.GetTestResult()
+				if test.GetStatus() == parser.TestStatus_FLAKY {
+					log.Info("test flaky")
+				}
 				if test != nil {
 					log.Info("test result", zap.String("result", test.GetStatusDetails()))
+				} else {
+					log.Warn("test result get nil")
 				}
 			} else {
 				log.Warn("tset result nil")
@@ -108,7 +113,6 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 	case *pb.BuildEvent_ConsoleOutput_,
 		*pb.BuildEvent_ComponentStreamFinished,
 		*pb.BuildEvent_BazelEvent,
-
 		*pb.BuildEvent_SourceFetchEvent:
 		return &emptypb.Empty{}, nil
 	default:
@@ -122,6 +126,9 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 			return &emptypb.Empty{}, err
 		}
 		test := data.GetTestResult()
+		if test.GetStatus() == parser.TestStatus_FLAKY {
+			log.Info("test flaky")
+		}
 		if test != nil {
 			log.Info("test result", zap.String("result", test.GetStatusDetails()))
 		} else {
