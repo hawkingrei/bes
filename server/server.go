@@ -138,7 +138,7 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 		}
 		test := data.GetTestResult()
 		if test != nil {
-			if test.GetStatus() == parser.TestStatus_FLAKY {
+			if test.GetStatus() == parser.TestStatus_FLAKY || test.GetStatus() == parser.TestStatus_FAILED {
 				log.Info("test result", zap.String("result", test.GetStatusDetails()), zap.String("string", test.String()))
 			}
 		}
