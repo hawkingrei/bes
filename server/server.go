@@ -26,7 +26,6 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 	acks := make([]int, 0)
 	var streamID *pb.StreamId
 	for {
-		log.Info("waiting for event")
 		in, err := stream.Recv()
 		if err == io.EOF {
 			break
@@ -40,17 +39,25 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 			var details *anypb.Any
 			switch e := event.(type) {
 			case *pb.BuildEvent_InvocationAttemptStarted_:
+				log.Info("PublishLifecycleEvent BuildEvent_InvocationAttemptStarted_")
 				details = e.InvocationAttemptStarted.Details
 			case *pb.BuildEvent_InvocationAttemptFinished_:
+				log.Info("PublishLifecycleEvent BuildEvent_InvocationAttemptFinished_")
 				details = e.InvocationAttemptFinished.Details
 			case *pb.BuildEvent_BuildEnqueued_:
+				log.Info("PublishLifecycleEvent BuildEvent_BuildEnqueued_")
 				details = e.BuildEnqueued.Details
 			case *pb.BuildEvent_BuildFinished_:
+				log.Info("PublishLifecycleEvent BuildEvent_BuildFinished_")
 				details = e.BuildFinished.Details
-			case *pb.BuildEvent_ConsoleOutput_,
-				*pb.BuildEvent_ComponentStreamFinished,
+			case *pb.BuildEvent_BuildExecutionEvent:
+				log.Info("PublishLifecycleEvent BuildEvent_BuildExecutionEvent")
+			case *pb.BuildEvent_ConsoleOutput_:
+				if e.ConsoleOutput.Type == pb.ConsoleOutputStream_STDERR {
+					log.Error("get error", zap.String("output", e.ConsoleOutput.GetTextOutput()))
+				}
+			case *pb.BuildEvent_ComponentStreamFinished,
 				*pb.BuildEvent_BazelEvent,
-				*pb.BuildEvent_BuildExecutionEvent,
 				*pb.BuildEvent_SourceFetchEvent:
 			default:
 				log.Error("unknown event type")
@@ -68,11 +75,7 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 				}
 				if test != nil {
 					log.Info("test result", zap.String("result", test.GetStatusDetails()))
-				} else {
-					log.Warn("test result get nil")
 				}
-			} else {
-				log.Warn("tset result nil")
 			}
 		}
 		acks = append(acks, int(in.GetOrderedBuildEvent().SequenceNumber))
@@ -92,7 +95,6 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 }
 
 func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycleEventRequest) (*emptypb.Empty, error) {
-	log.Info("PublishLifecycleEvent")
 	event := req.BuildEvent.GetEvent().Event
 	var details *anypb.Any
 	switch e := event.(type) {
@@ -131,11 +133,7 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 		}
 		if test != nil {
 			log.Info("test result", zap.String("result", test.GetStatusDetails()))
-		} else {
-			log.Warn("test result get nil")
 		}
-	} else {
-		log.Warn("tset result nil")
 	}
 	return &emptypb.Empty{}, nil
 }
