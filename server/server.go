@@ -116,16 +116,22 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 		details = e.BuildFinished.Details
 	case *pb.BuildEvent_BuildExecutionEvent:
 		log.Info("PublishLifecycleEvent BuildEvent_BuildExecutionEvent")
-	case *pb.BuildEvent_ConsoleOutput_,
-		*pb.BuildEvent_ComponentStreamFinished,
-		*pb.BuildEvent_BazelEvent,
+	case *pb.BuildEvent_ConsoleOutput_:
+		log.Info("PublishLifecycleEvent BuildEvent_ConsoleOutput_")
+		if e.ConsoleOutput.Type == pb.ConsoleOutputStream_STDERR {
+			log.Error("get error", zap.String("output", e.ConsoleOutput.GetTextOutput()))
+		}
+	case *pb.BuildEvent_BazelEvent:
+		log.Info("PublishLifecycleEvent BuildEvent_BazelEvent")
+		details = e.BazelEvent
+	case *pb.BuildEvent_ComponentStreamFinished,
 		*pb.BuildEvent_SourceFetchEvent:
 		return &emptypb.Empty{}, nil
 	default:
 		log.Error("unknown event type")
 	}
 	if details != nil {
-		var data parser.BuildEventId
+		var data parser.BuildEvent
 		err := anypb.UnmarshalTo(details, &data, proto.UnmarshalOptions{})
 		if err != nil {
 			log.Error("failed to unmarshal event", zap.Error(err))
