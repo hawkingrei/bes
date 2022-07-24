@@ -26,6 +26,7 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 	acks := make([]int, 0)
 	var streamID *pb.StreamId
 	for {
+		log.Info("waiting for event")
 		in, err := stream.Recv()
 		if err == io.EOF {
 			break
@@ -82,6 +83,7 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 }
 
 func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycleEventRequest) (*emptypb.Empty, error) {
+	log.Info("PublishLifecycleEvent")
 	event := req.BuildEvent.GetEvent().Event
 	var details *anypb.Any
 	switch e := event.(type) {
