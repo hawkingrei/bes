@@ -95,11 +95,12 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 		details = e.BuildEnqueued.Details
 	case *pb.BuildEvent_BuildFinished_:
 		details = e.BuildFinished.Details
-	case *pb.BuildEvent_ConsoleOutput_:
-	case *pb.BuildEvent_ComponentStreamFinished:
-	case *pb.BuildEvent_BazelEvent:
-	case *pb.BuildEvent_BuildExecutionEvent:
-	case *pb.BuildEvent_SourceFetchEvent:
+	case *pb.BuildEvent_ConsoleOutput_,
+		*pb.BuildEvent_ComponentStreamFinished,
+		*pb.BuildEvent_BazelEvent,
+		*pb.BuildEvent_BuildExecutionEvent,
+		*pb.BuildEvent_SourceFetchEvent:
+		return &emptypb.Empty{}, nil
 	default:
 		log.Error("unknown event type")
 	}
