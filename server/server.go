@@ -103,15 +103,17 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 	default:
 		log.Error("unknown event type")
 	}
-	var data parser.BuildEvent
-	err := anypb.UnmarshalTo(details, &data, proto.UnmarshalOptions{})
-	if err != nil {
-		log.Error("failed to unmarshal event", zap.Error(err))
-		return &emptypb.Empty{}, err
-	}
-	test := data.GetTestResult()
-	if test != nil {
-		log.Info("test result", zap.String("result", test.GetStatusDetails()))
+	if details != nil {
+		var data parser.BuildEvent
+		err := anypb.UnmarshalTo(details, &data, proto.UnmarshalOptions{})
+		if err != nil {
+			log.Error("failed to unmarshal event", zap.Error(err))
+			return &emptypb.Empty{}, err
+		}
+		test := data.GetTestResult()
+		if test != nil {
+			log.Info("test result", zap.String("result", test.GetStatusDetails()))
+		}
 	}
 	return &emptypb.Empty{}, nil
 }
