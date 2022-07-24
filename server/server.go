@@ -92,17 +92,23 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 	var details *anypb.Any
 	switch e := event.(type) {
 	case *pb.BuildEvent_InvocationAttemptStarted_:
+		log.Info("PublishLifecycleEvent BuildEvent_InvocationAttemptStarted_")
 		details = e.InvocationAttemptStarted.Details
 	case *pb.BuildEvent_InvocationAttemptFinished_:
+		log.Info("PublishLifecycleEvent BuildEvent_InvocationAttemptFinished_")
 		details = e.InvocationAttemptFinished.Details
 	case *pb.BuildEvent_BuildEnqueued_:
+		log.Info("PublishLifecycleEvent BuildEvent_BuildEnqueued_")
 		details = e.BuildEnqueued.Details
 	case *pb.BuildEvent_BuildFinished_:
+		log.Info("PublishLifecycleEvent BuildEvent_BuildFinished_")
 		details = e.BuildFinished.Details
+	case *pb.BuildEvent_BuildExecutionEvent:
+		log.Info("PublishLifecycleEvent BuildEvent_BuildExecutionEvent")
 	case *pb.BuildEvent_ConsoleOutput_,
 		*pb.BuildEvent_ComponentStreamFinished,
 		*pb.BuildEvent_BazelEvent,
-		*pb.BuildEvent_BuildExecutionEvent,
+
 		*pb.BuildEvent_SourceFetchEvent:
 		return &emptypb.Empty{}, nil
 	default:
