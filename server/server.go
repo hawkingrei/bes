@@ -78,7 +78,7 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 					log.Info("test flaky")
 				}
 				if test != nil {
-					log.Info("test result", zap.String("result", test.GetStatusDetails()))
+					log.Info("test result", zap.String("result", test.GetStatusDetails()), zap.String("string", test.String()))
 				}
 			}
 		}
@@ -142,7 +142,7 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 			log.Info("test flaky")
 		}
 		if test != nil {
-			log.Info("test result", zap.String("result", test.GetStatusDetails()))
+			log.Info("test result", zap.String("result", test.GetStatusDetails()), zap.String("string", test.String()))
 		}
 	}
 	return &emptypb.Empty{}, nil
