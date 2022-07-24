@@ -34,6 +34,7 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 			streamID = in.OrderedBuildEvent.StreamId
 		}
 		event := in.GetOrderedBuildEvent().Event
+		acks = append(acks, int(in.GetOrderedBuildEvent().SequenceNumber))
 		if event != nil {
 			event := event.GetEvent()
 			var details *anypb.Any
@@ -53,11 +54,14 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 			case *pb.BuildEvent_BuildExecutionEvent:
 				log.Info("PublishLifecycleEvent BuildEvent_BuildExecutionEvent")
 			case *pb.BuildEvent_ConsoleOutput_:
+				log.Info("PublishLifecycleEvent BuildEvent_ConsoleOutput_")
 				if e.ConsoleOutput.Type == pb.ConsoleOutputStream_STDERR {
 					log.Error("get error", zap.String("output", e.ConsoleOutput.GetTextOutput()))
 				}
+			case *pb.BuildEvent_BazelEvent:
+				log.Info("PublishLifecycleEvent BuildEvent_BazelEvent")
+				details = e.BazelEvent
 			case *pb.BuildEvent_ComponentStreamFinished,
-				*pb.BuildEvent_BazelEvent,
 				*pb.BuildEvent_SourceFetchEvent:
 			default:
 				log.Error("unknown event type")
@@ -67,7 +71,7 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 				err := anypb.UnmarshalTo(details, &data, proto.UnmarshalOptions{})
 				if err != nil {
 					log.Error("failed to unmarshal event", zap.Error(err))
-					break
+
 				}
 				test := data.GetTestResult()
 				if test.GetStatus() == parser.TestStatus_FLAKY {
@@ -78,7 +82,7 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 				}
 			}
 		}
-		acks = append(acks, int(in.GetOrderedBuildEvent().SequenceNumber))
+
 	}
 	slices.Sort(acks)
 	for _, ack := range acks {
@@ -121,7 +125,7 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 		log.Error("unknown event type")
 	}
 	if details != nil {
-		var data parser.BuildEvent
+		var data parser.BuildEventId
 		err := anypb.UnmarshalTo(details, &data, proto.UnmarshalOptions{})
 		if err != nil {
 			log.Error("failed to unmarshal event", zap.Error(err))
