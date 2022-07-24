@@ -61,10 +61,7 @@ func (*server) PublishBuildToolEventStream(stream pb.PublishBuildEvent_PublishBu
 				break
 			}
 			test := data.GetTestResult()
-			if test != nil &&
-				(test.GetStatus() == parser.TestStatus_FLAKY ||
-					test.GetStatus() == parser.TestStatus_FAILED ||
-					test.GetStatus() == parser.TestStatus_TIMEOUT) {
+			if test != nil {
 				log.Info("test result", zap.String("result", test.GetStatusDetails()))
 			}
 		}
@@ -111,10 +108,7 @@ func (*server) PublishLifecycleEvent(_ context.Context, req *pb.PublishLifecycle
 		return &emptypb.Empty{}, err
 	}
 	test := data.GetTestResult()
-	if test != nil &&
-		(test.GetStatus() == parser.TestStatus_FLAKY ||
-			test.GetStatus() == parser.TestStatus_FAILED ||
-			test.GetStatus() == parser.TestStatus_TIMEOUT) {
+	if test != nil {
 		log.Info("test result", zap.String("result", test.GetStatusDetails()))
 	}
 	return &emptypb.Empty{}, nil
